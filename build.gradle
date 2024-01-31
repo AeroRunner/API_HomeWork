@@ -1,19 +1,37 @@
 plugins {
-    id 'java'
+    id 'java-library'
+    id "org.gradle.test-retry" version "1.5.8"
 }
-
-group = 'org.example'
-version = '1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    testImplementation platform('org.junit:junit-bom:5.9.1')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation(
+            'io.rest-assured:rest-assured:5.3.1',
+            "org.junit.jupiter:junit-jupiter:5.10.0",
+            'org.slf4j:slf4j-simple:2.0.7'
+    )
 }
 
-test {
+tasks.withType(Test) {
     useJUnitPlatform()
+
+    testLogging {
+        lifecycle {
+            events "started", "skipped", "failed", "passed"
+            exceptionFormat "short"
+        }
+    }
+}
+task api_Test(type: Test) {
+    retry{
+        failOnPassedAfterRetry = true
+        maxFailures = 20
+        maxRetries = 20
+    }
+    useJUnitPlatform {
+        includeTags("api")
+    }
 }
